@@ -330,6 +330,7 @@
                 <executions>
                     <execution>
                         <goals>
+                            <goal>generate-module-metadata</goal>
                             <goal>generate-module</goal>
                             <goal>compile</goal>
                         </goals>
