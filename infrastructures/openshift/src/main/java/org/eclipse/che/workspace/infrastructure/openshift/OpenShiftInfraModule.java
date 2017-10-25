@@ -30,5 +30,6 @@ public class OpenShiftInfraModule extends AbstractModule {
     install(new FactoryModuleBuilder().build(OpenShiftRuntimeFactory.class));
     install(new FactoryModuleBuilder().build(OpenShiftBootstrapperFactory.class));
     bind(OpenShiftProjectCleanerSelector.class).asEagerSingleton();
+    bind(OpenShiftPvcStrategy.class).toProvider(OpenShiftPvcStrategyProvider.class);
   }
 }

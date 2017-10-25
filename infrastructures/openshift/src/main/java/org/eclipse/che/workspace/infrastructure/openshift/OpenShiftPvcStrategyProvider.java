@@ -13,6 +13,7 @@ package org.eclipse.che.workspace.infrastructure.openshift;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import javax.inject.Named;
 import javax.inject.Provider;
 
@@ -21,6 +22,7 @@ import javax.inject.Provider;
  *
  * @author Anton Korneta
  */
+@Singleton
 public class OpenShiftPvcStrategyProvider implements Provider<OpenShiftPvcStrategy> {
 
   @Inject
@@ -29,12 +31,11 @@ public class OpenShiftPvcStrategyProvider implements Provider<OpenShiftPvcStrate
 
   @Override
   public OpenShiftPvcStrategy get() {
-    for (OpenShiftPvcStrategy value : OpenShiftPvcStrategy.values()) {
-      if (strategy.equalsIgnoreCase(value.getName())) {
-        return value;
-      }
+    try {
+      return OpenShiftPvcStrategy.valueOf(strategy.toUpperCase());
+    } catch (IllegalArgumentException rethrow) {
+      throw new IllegalArgumentException(
+          format("Unsupported PVC strategy '%s' configured", strategy));
     }
-    throw new IllegalArgumentException(
-        format("Unsupported PVC strategy '%s' configured", strategy));
   }
 }
