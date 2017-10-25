@@ -10,7 +10,10 @@
  */
 package org.eclipse.che.workspace.infrastructure.openshift.project;
 
+import static org.eclipse.che.workspace.infrastructure.openshift.OpenShiftPvcStrategy.COMMON;
+import static org.eclipse.che.workspace.infrastructure.openshift.OpenShiftPvcStrategy.UNIQUE;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -29,30 +32,18 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
-/**
- * Tests {@link OpenShiftProjectCleanerSelector}.
- */
+/** Tests {@link OpenShiftProjectCleanerSelector}. */
 @Listeners(MockitoTestNGListener.class)
 public class OpenShiftProjectCleanerSelectorTest {
 
   private static final String WORKSPACE_ID = "workspace123";
   private static final String PROJECT_NAME = "che";
   private static final String PVC_NAME = "che-workspace-data";
-  private static final String ONE_PVC_PER_WORKSPACE_STRATEGY = "onePerWorkspace";
-  private static final String ONE_PVC_PER_PROJECT_STRATEGY = "onePerProject";
 
-  @Mock
-  private Workspace workspace;
-  @Mock
-  private OpenShiftClientFactory clientFactory;
-  @Mock
-  private OpenShiftClient openShiftClient;
-  @Mock
-  private EventService eventService;
-  @Mock
-  private DeleteOpenShiftProjectOnWorkspaceRemove removeOSProjectOnWsRemoveSubscriber;
-  @Mock
-  private DeleteOpenShiftProjectPvcOnWorkspaceRemove removeOSProjectPVCOnWsRemoveSubscriber;
+  @Mock private Workspace workspace;
+  @Mock private OpenShiftClientFactory clientFactory;
+  @Mock private OpenShiftClient client;
+  @Mock private EventService eventService;
 
   private OpenShiftProjectCleanerSelector openShiftProjectCleanerSelector;
 
@@ -61,8 +52,8 @@ public class OpenShiftProjectCleanerSelectorTest {
     openShiftProjectCleanerSelector =
         spy(
             new OpenShiftProjectCleanerSelector(
-                true, PROJECT_NAME, ONE_PVC_PER_PROJECT_STRATEGY, PVC_NAME, clientFactory));
-
+                true, PROJECT_NAME, PVC_NAME, COMMON, clientFactory));
+    when(clientFactory.create()).thenReturn(client);
     when(workspace.getId()).thenReturn(WORKSPACE_ID);
   }
 
@@ -71,7 +62,7 @@ public class OpenShiftProjectCleanerSelectorTest {
     openShiftProjectCleanerSelector =
         spy(
             new OpenShiftProjectCleanerSelector(
-                false, PROJECT_NAME, ONE_PVC_PER_PROJECT_STRATEGY, PVC_NAME, clientFactory));
+                false, PROJECT_NAME, PVC_NAME, UNIQUE, clientFactory));
 
     openShiftProjectCleanerSelector.subscribe(eventService);
 
@@ -81,9 +72,7 @@ public class OpenShiftProjectCleanerSelectorTest {
   @Test
   public void testSubscribesDeleteOpenShiftProjectOnWorkspaceRemove() throws Exception {
     openShiftProjectCleanerSelector =
-        spy(
-            new OpenShiftProjectCleanerSelector(
-                true, null, ONE_PVC_PER_PROJECT_STRATEGY, PVC_NAME, clientFactory));
+        spy(new OpenShiftProjectCleanerSelector(true, null, PVC_NAME, COMMON, clientFactory));
 
     openShiftProjectCleanerSelector.subscribe(eventService);
 
@@ -95,7 +84,7 @@ public class OpenShiftProjectCleanerSelectorTest {
     openShiftProjectCleanerSelector =
         spy(
             new OpenShiftProjectCleanerSelector(
-                true, PROJECT_NAME, ONE_PVC_PER_WORKSPACE_STRATEGY, PVC_NAME, clientFactory));
+                true, PROJECT_NAME, PVC_NAME, UNIQUE, clientFactory));
 
     openShiftProjectCleanerSelector.subscribe(eventService);
 
@@ -112,12 +101,9 @@ public class OpenShiftProjectCleanerSelectorTest {
   @Test(expectedExceptions = IllegalArgumentException.class)
   public void throwsIllegalArgumentExceptionWhenUnsupportedStrategySelected() throws Exception {
     openShiftProjectCleanerSelector =
-        spy(
-            new OpenShiftProjectCleanerSelector(
-                true, PROJECT_NAME, "unsupported", PVC_NAME, clientFactory));
+        spy(new OpenShiftProjectCleanerSelector(true, null, null, null, clientFactory));
+    doThrow(IllegalArgumentException.class).when(openShiftProjectCleanerSelector).subscribe(any());
 
     openShiftProjectCleanerSelector.subscribe(eventService);
-
-    verify(eventService, never()).subscribe(any());
   }
 }

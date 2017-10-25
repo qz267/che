@@ -24,6 +24,7 @@ import org.eclipse.che.api.core.notification.EventSubscriber;
 import org.eclipse.che.api.workspace.shared.event.WorkspaceRemovedEvent;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftClientFactory;
+import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftPvcStrategy;
 
 /**
  * Picks the OpenShift project data cleaner on {@code WorkspaceRemovedEvent} in accordance with
@@ -37,22 +38,22 @@ public class OpenShiftProjectCleanerSelector {
 
   private final boolean pvcEnabled;
   private final String projectName;
-  private final String pvcStrategy;
   private final String pvcName;
+  private final OpenShiftPvcStrategy pvcStrategy;
   private final OpenShiftClientFactory clientFactory;
 
   @Inject
   public OpenShiftProjectCleanerSelector(
       @Named("che.infra.openshift.pvc.enabled") boolean pvcEnabled,
       @Nullable @Named("che.infra.openshift.project") String projectName,
-      @Named("che.infra.openshift.pvc.strategy") String pvcStrategy,
       @Named("che.infra.openshift.pvc.name") String pvcName,
+      OpenShiftPvcStrategy pvcStrategy,
       OpenShiftClientFactory clientFactory) {
     this.pvcEnabled = pvcEnabled;
-    this.clientFactory = clientFactory;
-    this.pvcStrategy = pvcStrategy;
     this.projectName = projectName;
     this.pvcName = pvcName;
+    this.pvcStrategy = pvcStrategy;
+    this.clientFactory = clientFactory;
   }
 
   @Inject
@@ -66,10 +67,10 @@ public class OpenShiftProjectCleanerSelector {
       return;
     }
     switch (pvcStrategy) {
-      case "onePerWorkspace":
+      case UNIQUE:
         eventService.subscribe(new DeleteOpenShiftProjectPvcOnWorkspaceRemove(projectName));
         break;
-      case "onePerProject":
+      case COMMON:
         // TODO implement https://github.com/eclipse/che/issues/6767
         break;
       default:

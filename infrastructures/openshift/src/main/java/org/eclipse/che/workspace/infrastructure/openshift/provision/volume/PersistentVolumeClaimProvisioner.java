@@ -30,6 +30,7 @@ import org.eclipse.che.api.core.model.workspace.runtime.RuntimeIdentity;
 import org.eclipse.che.api.workspace.server.WsAgentMachineFinderUtil;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironment;
+import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftPvcStrategy;
 import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftEnvironment;
 import org.eclipse.che.workspace.infrastructure.openshift.provision.ConfigurationProvisioner;
 
@@ -42,20 +43,20 @@ import org.eclipse.che.workspace.infrastructure.openshift.provision.Configuratio
 public class PersistentVolumeClaimProvisioner implements ConfigurationProvisioner {
 
   private final boolean pvcEnable;
-  private final String pvcStrategy;
   private final String pvcName;
   private final String pvcQuantity;
   private final String pvcAccessMode;
   private final String projectFolderPath;
+  private final OpenShiftPvcStrategy pvcStrategy;
 
   @Inject
   public PersistentVolumeClaimProvisioner(
       @Named("che.infra.openshift.pvc.enabled") boolean pvcEnable,
-      @Named("che.infra.openshift.pvc.strategy") String pvcStrategy,
       @Named("che.infra.openshift.pvc.name") String pvcName,
       @Named("che.infra.openshift.pvc.quantity") String pvcQuantity,
       @Named("che.infra.openshift.pvc.access_mode") String pvcAccessMode,
-      @Named("che.workspace.projects.storage") String projectFolderPath) {
+      @Named("che.workspace.projects.storage") String projectFolderPath,
+      OpenShiftPvcStrategy pvcStrategy) {
     this.pvcEnable = pvcEnable;
     this.pvcStrategy = pvcStrategy;
     this.pvcName = pvcName;
@@ -72,10 +73,10 @@ public class PersistentVolumeClaimProvisioner implements ConfigurationProvisione
       final String workspaceId = runtimeIdentity.getWorkspaceId();
       final String pvcUniqueName;
       switch (pvcStrategy) {
-        case "onePerWorkspace":
+        case UNIQUE:
           pvcUniqueName = pvcName + '-' + workspaceId;
           break;
-        case "onePerProject":
+        case COMMON:
           pvcUniqueName = pvcName;
           break;
         default:
@@ -109,7 +110,7 @@ public class PersistentVolumeClaimProvisioner implements ConfigurationProvisione
                 new VolumeMountBuilder()
                     .withMountPath(projectFolderPath)
                     .withName(pvcUniqueName)
-                    .withSubPath(runtimeIdentity.getWorkspaceId() + projectFolderPath)
+                    .withSubPath(workspaceId + projectFolderPath)
                     .build();
             container.getVolumeMounts().add(volumeMount);
             final PersistentVolumeClaimVolumeSource pvcs =
