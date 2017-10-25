@@ -27,14 +27,17 @@ import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftClientFactory
 import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftPvcStrategy;
 
 /**
- * Picks the OpenShift project data cleaner on {@code WorkspaceRemovedEvent} in accordance with
- * configuration.
+ * Clean the workspace related OpenShift resources after {@code WorkspaceRemovedEvent}.
+ *
+ * <p>Note that depending on a configuration different types of cleaners may be chosen. In case of
+ * configuration when new OpenShift project created for each workspace, the whole project will be
+ * removed, after workspace removal.
  *
  * @author Sergii Leshchenko
  * @author Anton Korneta
  */
 @Singleton
-public class OpenShiftProjectCleanerSelector {
+public class OpenShiftProjectCleaner {
 
   private final boolean pvcEnabled;
   private final String projectName;
@@ -43,7 +46,7 @@ public class OpenShiftProjectCleanerSelector {
   private final OpenShiftClientFactory clientFactory;
 
   @Inject
-  public OpenShiftProjectCleanerSelector(
+  public OpenShiftProjectCleaner(
       @Named("che.infra.openshift.pvc.enabled") boolean pvcEnabled,
       @Nullable @Named("che.infra.openshift.project") String projectName,
       @Named("che.infra.openshift.pvc.name") String pvcName,
