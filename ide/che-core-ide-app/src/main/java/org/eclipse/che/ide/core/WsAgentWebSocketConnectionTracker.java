@@ -42,7 +42,7 @@ import org.eclipse.che.ide.bootstrap.BasicIDEInitializedEvent;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 
 /**
- * Tracks web socket connection to control ws agent state state. Notifies client side by {@link
+ * Tracks web socket connection to control ws agent state. Notifies client side by {@link
  * WsAgentServerStoppedEvent} when the connection is lost. Prompts to restart a workspace when
  * connection is lost, but workspace is running.
  *
