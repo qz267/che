@@ -1216,4 +1216,16 @@ public interface CoreLocalizationConstant extends Messages {
 
   @Key("failed.to.find.machine")
   String failedToFindMachine(String machineId);
+
+  @Key("ws.agent.lost.connection.dialog.title")
+  String wsAgentNotRespondingDialogTitle();
+
+  @Key("ws.agent.lost.connection.dialog.message")
+  String wsAgentNotRespondingDialogMessage();
+
+  @Key("ws.agent.lost.connection.dialog.restart")
+  String wsAgentNotRespondingDialogRestart();
+
+  @Key("ws.agent.lost.connection.dialog.close")
+  String wsAgentNotRespondingDialogClose();
 }
